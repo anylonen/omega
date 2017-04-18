@@ -1,0 +1,12 @@
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+lib/maps.dat
+src/clrgen.*
+src/date.c
+src/omega
+tools/crypt
+tools/decrypt
+tools/genclr
+tools/makedate
