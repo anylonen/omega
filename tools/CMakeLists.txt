@@ -1,0 +1,69 @@
+SET(CRYPT_SOURCES
+    crypt.c
+    bwt.c)
+
+SET(DECRYPT_SOURCES
+    decrypt.c)
+
+SET(MAKEDATE_SOURCES
+    makedate.c)
+
+SET(GENCLR_SOURCES
+    genclr.c)
+
+ADD_EXECUTABLE(crypt ${CRYPT_SOURCES})
+ADD_EXECUTABLE(decrypt ${DECRYPT_SOURCES})
+ADD_EXECUTABLE(makedate ${MAKEDATE_SOURCES})
+ADD_EXECUTABLE(genclr ${GENCLR_SOURCES})
+
+# Generate clrgen.h and clrgen.c
+FILE(GLOB CLRGEN_H ${CMAKE_SOURCE_DIR}/src/*.h)
+FILE(GLOB CLRGEN_C ${CMAKE_SOURCE_DIR}/src/*.c)
+LIST(APPEND CLRGEN_SOURCES ${CLRGEN_H} ${CLRGEN_C})
+
+SET(GENCLR_PRG ${CMAKE_CURRENT_SOURCE_DIR}/genclr)
+
+ADD_CUSTOM_COMMAND(
+    OUTPUT clrgen.cpp clrgen.h
+    COMMAND ${CMAKE_C_COMPILER} -E -DOMEGA_CLRGEN -I${LUAJIT_INCLUDE_DIR} -I${CURSES_INCLUDE_DIR} ${CLRGEN_SOURCES} | ${GENCLR_PRG} clrgen.c clrgen.h
+    COMMAND ${CMAKE_COMMAND} -E rename clrgen.h ${CMAKE_SOURCE_DIR}/src/clrgen.h
+    COMMAND ${CMAKE_COMMAND} -E rename clrgen.c ${CMAKE_SOURCE_DIR}/src/clrgen.c
+    VERBATIM)
+
+ADD_CUSTOM_TARGET(
+    clrgen ALL
+    DEPENDS clrgen.cpp
+    VERBATIM)
+
+ADD_DEPENDENCIES(clrgen genclr)
+
+# Generate date.c
+SET(MAKEDATE_PRG ${CMAKE_CURRENT_SOURCE_DIR}/makedate)
+ADD_CUSTOM_COMMAND(
+    OUTPUT date.c
+    COMMAND ${MAKEDATE_PRG} > date.c
+    COMMAND ${CMAKE_COMMAND} -E rename date.c ${CMAKE_SOURCE_DIR}/src/date.c
+    VERBATIM)
+
+ADD_CUSTOM_TARGET(
+    date ALL
+    DEPENDS date.c
+    VERBATIM)
+
+ADD_DEPENDENCIES(date makedate)
+
+# Generate maps.dat
+FILE(GLOB MAPS ${CMAKE_SOURCE_DIR}/maps/*.map)
+SET(CRYPT_PRG ${CMAKE_CURRENT_SOURCE_DIR}/crypt)
+ADD_CUSTOM_COMMAND(
+    OUTPUT maps.dat
+    COMMAND ${CRYPT_PRG} maps.dat ${MAPS}
+    COMMAND ${CMAKE_COMMAND} -E rename maps.dat ${CMAKE_SOURCE_DIR}/lib/maps.dat
+    VERBATIM)
+
+ADD_CUSTOM_TARGET(
+    maps ALL
+    DEPENDS maps.dat
+    VERBATIM)
+
+ADD_DEPENDENCIES(maps crypt)
